@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
-from backend.ai import ask_ai
+from ai import ask_ai
 
 app = FastAPI()
 
