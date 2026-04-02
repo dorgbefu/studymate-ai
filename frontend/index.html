@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>StudyMate AI</title>
+</head>
+<body>
+
+<h2>AI Chatbot</h2>
+
+<input type="text" id="question" placeholder="Ask something..." size="50">
+<button onclick="askAI()">Ask</button>
+
+<p><strong>Answer:</strong></p>
+<p id="answer"></p>
+
+<script>
+async function askAI() {
+    const question = document.getElementById("question").value;
+
+    const response = await fetch("https://studymate-ai-0bjz.onrender.com/ask?question=" + encodeURIComponent(question));
+
+    const data = await response.json();
+
+    document.getElementById("answer").innerText = data.answer;
+}
+</script>
+
+</body>
+</html>
