@@ -4,20 +4,22 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
+# Create the FastAPI app
 app = FastAPI(title="StudyMate AI")
 
-# Allow frontend to call the backend (important!)
+# Enable CORS so your frontend can connect
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],           # Change to your frontend URL later for better security
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
+# Get API key from environment variables
 API_KEY = os.getenv("OPENAI_API_KEY")
 
-# Store conversation history (in memory - resets on restart)
+# Conversation history
 messages = [
     {
         "role": "system",
@@ -28,12 +30,13 @@ messages = [
 class Question(BaseModel):
     question: str
 
+# This is the endpoint your frontend is calling
 @app.post("/ask")
 async def ask_question(q: Question):
     if not API_KEY:
-        return {"answer": "Error: OPENAI_API_KEY environment variable is not set."}
+        return {"answer": "Error: OPENAI_API_KEY is not set in Environment Variables."}
 
-    # Add user question
+    # Add user question to history
     messages.append({"role": "user", "content": q.question})
 
     url = "https://api.openai.com/v1/chat/completions"
@@ -57,12 +60,12 @@ async def ask_question(q: Question):
             messages.append({"role": "assistant", "content": answer})
             return {"answer": answer}
         else:
-            return {"answer": "Error from OpenAI: " + str(result)}
+            return {"answer": "OpenAI error: " + str(result)}
     except Exception as e:
-        return {"answer": f"Request failed: {str(e)}"}
+        return {"answer": f"Failed to get response: {str(e)}"}
 
 
-# Optional: Health check route
+# Health check route
 @app.get("/")
 async def root():
-    return {"status": "StudyMate AI backend is running"}
+    return {"status": "StudyMate AI backend is running ✅"}
