@@ -19,6 +19,54 @@
             color: white;
         }
 
+        /* Auth Screen */
+        .auth-screen {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.95);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+        }
+        .auth-box {
+            background: #1e2937;
+            padding: 40px 30px;
+            border-radius: 20px;
+            width: 380px;
+            text-align: center;
+        }
+        .auth-box h2 {
+            color: var(--primary);
+            margin-bottom: 30px;
+        }
+        input {
+            width: 100%;
+            padding: 14px 16px;
+            margin: 10px 0;
+            background: #334155;
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-size: 1rem;
+        }
+        button {
+            width: 100%;
+            padding: 14px;
+            margin: 15px 0 10px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .toggle-link {
+            color: #94a3b8;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
         /* Sidebar */
         .sidebar {
             width: 300px;
@@ -26,6 +74,10 @@
             border-right: 1px solid #334155;
             display: flex;
             flex-direction: column;
+            transition: all 0.3s ease;
+        }
+        .sidebar.hidden {
+            margin-left: -300px;
         }
         .sidebar-header {
             padding: 20px;
@@ -34,10 +86,8 @@
             align-items: center;
             gap: 12px;
         }
-        .logo {
-            font-size: 28px;
-            color: var(--primary);
-        }
+        .logo { font-size: 28px; color: var(--primary); }
+
         .new-chat {
             margin: 16px;
             padding: 14px;
@@ -63,21 +113,30 @@
             margin: 4px 8px;
             border-radius: 12px;
             cursor: pointer;
-            transition: 0.2s;
         }
         .chat-item:hover, .chat-item.active {
             background: #334155;
         }
-        .chat-item .title {
-            font-weight: 500;
-            margin-bottom: 4px;
+
+        .sidebar-footer {
+            padding: 16px;
+            border-top: 1px solid #334155;
+            display: flex;
+            align-items: center;
+            gap: 12px;
         }
-        .chat-item .time {
-            font-size: 0.8rem;
-            color: #94a3b8;
+        .avatar {
+            width: 42px;
+            height: 42px;
+            background: var(--primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
         }
 
-        /* Main Chat Area */
+        /* Main Area */
         .main {
             flex: 1;
             display: flex;
@@ -89,8 +148,17 @@
             border-bottom: 1px solid #334155;
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 15px;
             font-weight: 600;
+        }
+        .toggle-sidebar {
+            cursor: pointer;
+            font-size: 1.4rem;
+            padding: 8px;
+            border-radius: 8px;
+        }
+        .toggle-sidebar:hover {
+            background: #334155;
         }
 
         .messages {
@@ -102,12 +170,10 @@
             flex-direction: column;
             gap: 16px;
         }
-
         .message {
             max-width: 75%;
             padding: 14px 18px;
             border-radius: 20px;
-            position: relative;
             line-height: 1.6;
         }
         .user {
@@ -122,7 +188,6 @@
             color: white;
             border-bottom-left-radius: 4px;
         }
-
         .typing {
             align-self: flex-start;
             background: #334155;
@@ -160,31 +225,30 @@
             border-radius: 50%;
             cursor: pointer;
         }
-
-        /* Profile */
-        .sidebar-footer {
-            padding: 16px;
-            border-top: 1px solid #334155;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        .avatar {
-            width: 42px;
-            height: 42px;
-            background: var(--primary);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.3rem;
-        }
     </style>
 </head>
 <body>
 
-    <!-- SIDEBAR -->
-    <div class="sidebar">
+    <!-- Auth Screen -->
+    <div class="auth-screen" id="authScreen">
+        <div class="auth-box">
+            <h2 id="authTitle">Create Account</h2>
+            
+            <input type="text" id="fullName" placeholder="Full Name">
+            <input type="email" id="email" placeholder="Email">
+            <input type="password" id="password" placeholder="Password">
+            <input type="password" id="confirmPassword" placeholder="Confirm Password">
+
+            <button id="authButton" onclick="handleAuth()">Create Account</button>
+            
+            <div class="toggle-link" id="toggleLink" onclick="toggleAuthMode()">
+                Already have an account? Login
+            </div>
+        </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
         <div class="sidebar-header">
             <span class="logo">📚</span>
             <h2>StudyMate AI</h2>
@@ -197,18 +261,19 @@
         <div class="chat-list" id="chatList"></div>
 
         <div class="sidebar-footer">
-            <div class="avatar">👤</div>
+            <div class="avatar" id="userAvatar">👤</div>
             <div style="flex:1">
-                <strong>Student</strong><br>
-                <small style="color:#94a3b8">student@email.com</small>
+                <strong id="userFullName">Student</strong><br>
+                <small id="userEmail">student@email.com</small>
             </div>
             <i class="fas fa-sign-out-alt" onclick="logout()" style="cursor:pointer;font-size:1.5rem"></i>
         </div>
     </div>
 
-    <!-- MAIN CHAT -->
+    <!-- Main Chat -->
     <div class="main">
         <div class="chat-header">
+            <i class="fas fa-bars toggle-sidebar" onclick="toggleSidebar()"></i>
             <strong id="currentChatTitle">New Chat</strong>
         </div>
 
@@ -216,20 +281,97 @@
 
         <div class="input-area">
             <div class="input-box">
-                <input type="text" id="question" placeholder="Type your message..." autocomplete="off">
-                <button onclick="sendMessage()">
-                    <i class="fas fa-paper-plane"></i>
-                </button>
+                <input type="text" id="question" placeholder="Ask anything..." autocomplete="off">
+                <button onclick="sendMessage()"><i class="fas fa-paper-plane"></i></button>
             </div>
         </div>
     </div>
 
     <script>
-        let chats = JSON.parse(localStorage.getItem('chats')) || [];
+        let currentUser = null;
+        let chats = [];
         let currentChatId = null;
+        let sidebarVisible = true;
 
-        function saveChats() {
-            localStorage.setItem('chats', JSON.stringify(chats));
+        // Load on start
+        window.onload = () => {
+            const savedUser = localStorage.getItem('currentUser');
+            if (savedUser) {
+                currentUser = JSON.parse(savedUser);
+                document.getElementById('authScreen').style.display = 'none';
+                initApp();
+            } else {
+                document.getElementById('authScreen').style.display = 'flex';
+            }
+        };
+
+        function toggleAuthMode() {
+            const isRegister = document.getElementById('authTitle').textContent === "Create Account";
+            document.getElementById('authTitle').textContent = isRegister ? "Login" : "Create Account";
+            document.getElementById('authButton').textContent = isRegister ? "Login" : "Create Account";
+            
+            document.getElementById('fullName').style.display = isRegister ? "none" : "block";
+            document.getElementById('confirmPassword').style.display = isRegister ? "none" : "block";
+            
+            document.getElementById('toggleLink').textContent = isRegister ?
+                "Don't have an account? Create Account" : "Already have an account? Login";
+        }
+
+        function handleAuth() {
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value.trim();
+            const fullName = document.getElementById('fullName').value.trim();
+
+            if (!email || !password) {
+                alert("Email and password are required!");
+                return;
+            }
+
+            let users = JSON.parse(localStorage.getItem('users')) || [];
+
+            if (document.getElementById('authTitle').textContent === "Create Account") {
+                // Register
+                if (!fullName) {
+                    alert("Full Name is required!");
+                    return;
+                }
+                if (users.find(u => u.email === email)) {
+                    alert("Email already registered!");
+                    return;
+                }
+                users.push({ fullName, email, password });
+                localStorage.setItem('users', JSON.stringify(users));
+                alert("Account created successfully! Please login.");
+                toggleAuthMode();
+            } else {
+                // Login
+                const user = users.find(u => u.email === email && u.password === password);
+                if (!user) {
+                    alert("Invalid email or password!");
+                    return;
+                }
+                currentUser = user;
+                localStorage.setItem('currentUser', JSON.stringify(user));
+                document.getElementById('authScreen').style.display = 'none';
+                initApp();
+            }
+        }
+
+        function initApp() {
+            document.getElementById('userFullName').textContent = currentUser.fullName;
+            document.getElementById('userEmail').textContent = currentUser.email;
+            document.getElementById('userAvatar').textContent = currentUser.fullName.charAt(0).toUpperCase();
+
+            chats = JSON.parse(localStorage.getItem('chats')) || [];
+            if (chats.length === 0) newChat();
+            else switchChat(chats[0].id);
+
+            renderChatList();
+        }
+
+        function toggleSidebar() {
+            sidebarVisible = !sidebarVisible;
+            document.getElementById('sidebar').classList.toggle('hidden', !sidebarVisible);
         }
 
         function newChat() {
@@ -239,7 +381,7 @@
                 messages: []
             };
             chats.unshift(chat);
-            saveChats();
+            localStorage.setItem('chats', JSON.stringify(chats));
             renderChatList();
             switchChat(chat.id);
         }
@@ -279,8 +421,7 @@
             if (!text || !currentChatId) return;
 
             const chat = chats.find(c => c.id === currentChatId);
-            chat.messages.push({ isUser: true, text: text });
-            input.value = '';
+            chat.messages.push({ isUser: true, text });
 
             const container = document.getElementById('messages');
             const userDiv = document.createElement('div');
@@ -289,11 +430,13 @@
             container.appendChild(userDiv);
             container.scrollTop = container.scrollHeight;
 
+            input.value = "";
+
             // Typing indicator
-            const typingDiv = document.createElement('div');
-            typingDiv.className = 'message ai typing';
-            typingDiv.textContent = "Thinking...";
-            container.appendChild(typingDiv);
+            const typing = document.createElement('div');
+            typing.className = 'message ai typing';
+            typing.textContent = "Thinking...";
+            container.appendChild(typing);
             container.scrollTop = container.scrollHeight;
 
             try {
@@ -302,37 +445,30 @@
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ question: text })
                 });
-
                 const data = await res.json();
-                typingDiv.remove();
 
+                typing.remove();
                 const aiDiv = document.createElement('div');
                 aiDiv.className = 'message ai';
-                aiDiv.textContent = data.answer || "Sorry, no response received.";
+                aiDiv.textContent = data.answer || "Sorry, I couldn't generate a response.";
                 container.appendChild(aiDiv);
                 container.scrollTop = container.scrollHeight;
 
                 chat.messages.push({ isUser: false, text: aiDiv.textContent });
-                saveChats();
+                localStorage.setItem('chats', JSON.stringify(chats));
             } catch (e) {
-                typingDiv.textContent = "❌ Connection error. Please check your internet.";
+                typing.textContent = "❌ Connection error. Please check your internet.";
             }
         }
 
         function logout() {
-            if (confirm("Logout from StudyMate AI?")) {
-                localStorage.clear();
+            if (confirm("Are you sure you want to logout?")) {
+                localStorage.removeItem('currentUser');
                 location.reload();
             }
         }
 
-        // Initialize
-        if (chats.length === 0) newChat();
-        else switchChat(chats[0].id);
-
-        renderChatList();
-
-        // Send on Enter
+        // Send message with Enter key
         document.getElementById('question').addEventListener('keypress', e => {
             if (e.key === "Enter") sendMessage();
         });
