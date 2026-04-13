@@ -31,6 +31,7 @@
             transition: transform 0.4s ease;
         }
         .container:hover { transform: translateY(-8px); }
+
         header {
             background: linear-gradient(135deg, var(--primary), var(--primary-dark));
             color: white;
@@ -51,9 +52,12 @@
             50% { transform: translate(30%, 30%); }
             100% { transform: translate(-30%, -30%); }
         }
+
         h1 { font-size: 3rem; font-weight: 700; margin-bottom: 10px; animation: fadeInDown 0.8s ease; }
         .tagline { font-size: 1.15rem; opacity: 0.95; animation: fadeInDown 1s ease 0.2s forwards; opacity: 0; }
+
         .main-content { padding: 42px 40px; }
+
         .input-area { position: relative; margin-bottom: 32px; }
         input {
             width: 100%;
@@ -69,6 +73,7 @@
             box-shadow: 0 0 0 5px rgba(99,102,241,0.18);
             transform: scale(1.02);
         }
+
         button {
             position: absolute;
             right: 10px; top: 50%;
@@ -100,11 +105,13 @@
             transition: all 0.5s ease;
         }
         .answer-box.show { opacity: 1; transform: translateY(0); }
+
         .answer-box:empty::before {
             content: "Your AI study assistant is ready to help... ✨";
             color: var(--text-light);
             font-style: italic;
         }
+
         .loading { 
             display: none; 
             align-items: center; 
@@ -137,22 +144,18 @@
 
         <div class="main-content">
             <div class="input-area">
-                <input 
-                    type="text" 
-                    id="question" 
-                    placeholder="Ask anything... e.g., Explain quantum entanglement in simple terms" 
-                    autocomplete="off"
-                >
+                <input type="text" id="question" placeholder="Ask anything... e.g., Explain photosynthesis step by step" autocomplete="off">
                 <button onclick="askAI()">
                     <i class="fas fa-paper-plane"></i> Ask AI
                 </button>
             </div>
 
             <div class="answer-section">
-                <p style="margin-bottom:12px; font-weight:600; color:var(--text-light); display:flex; align-items:center; gap:8px;">
+                <p style="margin-bottom:12px; font-weight:600; color:var(--text-light);">
                     <i class="fas fa-lightbulb"></i> Answer from StudyMate AI
                 </p>
                 <div class="answer-box" id="answer"></div>
+
                 <div class="loading" id="loading">
                     <i class="fas fa-spinner spinner"></i>
                     <span>Thinking deeply...</span>
@@ -166,14 +169,12 @@
     </div>
 
     <script>
-        // Your actual backend URL from Render
         const BACKEND_URL = "https://studymate-ai-yqqz.onrender.com";
 
         async function askAI() {
-            const questionInput = document.getElementById("question");
+            const question = document.getElementById("question").value.trim();
             const answerBox = document.getElementById("answer");
             const loading = document.getElementById("loading");
-            const question = questionInput.value.trim();
 
             if (!question) {
                 answerBox.innerHTML = `<span style="color:#ef4444;">Please type a question first ✨</span>`;
@@ -181,36 +182,32 @@
                 return;
             }
 
-            // Reset UI
             answerBox.classList.remove("show");
             answerBox.innerHTML = "";
             loading.classList.add("active");
 
             try {
-                const response = await fetch(`${BACKEND_URL}/ask`, {
+                const res = await fetch(`${BACKEND_URL}/ask`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ question: question })
                 });
 
-                if (!response.ok) throw new Error("Server error");
-
-                const data = await response.json();
+                const data = await res.json();
 
                 loading.classList.remove("active");
-                answerBox.innerHTML = data.answer || "Sorry, no answer received.";
+                answerBox.innerHTML = data.answer || "No answer received.";
                 answerBox.classList.add("show");
 
-            } catch (error) {
+            } catch (err) {
                 loading.classList.remove("active");
-                answerBox.innerHTML = `<span style="color:#ef4444;">⚠️ Could not connect to AI backend.<br>Please check if the backend is running.</span>`;
+                answerBox.innerHTML = `<span style="color:#ef4444;">⚠️ Cannot connect to the AI backend.<br>Please check if the service is running.</span>`;
                 answerBox.classList.add("show");
-                console.error(error);
             }
         }
 
-        // Press Enter to ask
-        document.getElementById("question").addEventListener("keypress", (e) => {
+        // Press Enter to send
+        document.getElementById("question").addEventListener("keypress", e => {
             if (e.key === "Enter") askAI();
         });
     </script>
