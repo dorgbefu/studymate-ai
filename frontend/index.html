@@ -3,218 +3,338 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>StudyMate AI • Your Smart Study Buddy</title>
+    <title>StudyMate AI</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
     <style>
         :root {
             --primary: #6366f1;
             --primary-dark: #4f46e5;
-            --card: #ffffff;
-            --text: #1e2937;
-            --text-light: #64748b;
         }
         * { margin: 0; padding: 0; box-sizing: border-box; }
-
         body {
             font-family: 'Segoe UI', system-ui, sans-serif;
             background: linear-gradient(135deg, #f0f4ff 0%, #e0e7ff 100%);
-            min-height: 100vh;
+            height: 100vh;
+            display: flex;
+            overflow: hidden;
+        }
+
+        /* SIDEBAR */
+        .sidebar {
+            width: 280px;
+            background: white;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+        }
+        .sidebar-header {
             padding: 20px;
-            color: var(--text);
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
         }
-
-        .container {
-            max-width: 920px;
-            margin: 40px auto;
-            background: var(--card);
-            border-radius: 28px;
-            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.15);
-            overflow: hidden;
-            transition: transform 0.4s ease;
+        .logo {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--primary);
         }
-        .container:hover { transform: translateY(-8px); }
-
-        header {
-            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-            color: white;
-            padding: 48px 40px 36px;
-            text-align: center;
-            position: relative;
-            overflow: hidden;
-        }
-        header::before {
-            content: '';
-            position: absolute;
-            inset: -50%;
-            background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 70%);
-            animation: shine 8s linear infinite;
-        }
-        @keyframes shine {
-            0% { transform: translate(-30%, -30%); }
-            50% { transform: translate(30%, 30%); }
-            100% { transform: translate(-30%, -30%); }
-        }
-
-        h1 { font-size: 3rem; font-weight: 700; margin-bottom: 10px; animation: fadeInDown 0.8s ease; }
-        .tagline { font-size: 1.15rem; opacity: 0.95; animation: fadeInDown 1s ease 0.2s forwards; opacity: 0; }
-
-        .main-content { padding: 42px 40px; }
-
-        .input-area { position: relative; margin-bottom: 32px; }
-        input {
-            width: 100%;
-            padding: 20px 28px;
-            font-size: 1.15rem;
-            border: 2px solid #e2e8f0;
-            border-radius: 20px;
-            outline: none;
-            transition: all 0.4s ease;
-        }
-        input:focus {
-            border-color: var(--primary);
-            box-shadow: 0 0 0 5px rgba(99,102,241,0.18);
-            transform: scale(1.02);
-        }
-
-        button {
-            position: absolute;
-            right: 10px; top: 50%;
-            transform: translateY(-50%);
+        .new-chat-btn {
+            margin: 16px;
+            padding: 14px;
             background: var(--primary);
             color: white;
             border: none;
-            padding: 16px 32px;
-            border-radius: 16px;
+            border-radius: 12px;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .chat-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 8px;
+        }
+        .chat-item {
+            padding: 12px 16px;
+            margin: 4px 8px;
+            border-radius: 12px;
+            cursor: pointer;
             display: flex;
             align-items: center;
             gap: 10px;
         }
-        button:hover { background: var(--primary-dark); transform: translateY(-50%) scale(1.08); }
+        .chat-item:hover, .chat-item.active {
+            background: #f1f5f9;
+        }
 
-        .answer-box {
+        .sidebar-footer {
+            padding: 16px;
+            border-top: 1px solid #e2e8f0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .profile {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex: 1;
+            cursor: pointer;
+        }
+        .avatar {
+            width: 40px;
+            height: 40px;
+            background: #6366f1;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        /* MAIN CHAT AREA */
+        .main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        .chat-header {
+            padding: 16px 24px;
+            background: white;
+            border-bottom: 1px solid #e2e8f0;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .messages {
+            flex: 1;
+            padding: 24px;
+            overflow-y: auto;
             background: #f8fafc;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .message {
+            max-width: 75%;
+            padding: 14px 18px;
             border-radius: 20px;
-            padding: 32px;
-            min-height: 220px;
-            border: 2px solid #e2e8f0;
-            line-height: 1.75;
-            font-size: 1.12rem;
-            opacity: 0;
-            transform: translateY(20px);
-            transition: all 0.5s ease;
+            line-height: 1.5;
         }
-        .answer-box.show { opacity: 1; transform: translateY(0); }
-
-        .answer-box:empty::before {
-            content: "Your AI study assistant is ready to help... ✨";
-            color: var(--text-light);
-            font-style: italic;
+        .user {
+            align-self: flex-end;
+            background: #6366f1;
+            color: white;
+            border-bottom-right-radius: 6px;
+        }
+        .ai {
+            align-self: flex-start;
+            background: white;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            border-bottom-left-radius: 6px;
         }
 
-        .loading { 
-            display: none; 
-            align-items: center; 
-            justify-content: center; 
-            gap: 12px; 
-            color: var(--primary); 
-            padding: 20px; 
+        .input-area {
+            padding: 20px 24px;
+            background: white;
+            border-top: 1px solid #e2e8f0;
         }
-        .loading.active { display: flex; }
-        .spinner { animation: spin 1.2s linear infinite; }
-        @keyframes spin { to { transform: rotate(360deg); } }
-        @keyframes fadeInDown { 
-            from { opacity: 0; transform: translateY(-30px); } 
-            to { opacity: 1; transform: translateY(0); } 
+        .input-box {
+            display: flex;
+            gap: 12px;
+            background: #f1f5f9;
+            border-radius: 9999px;
+            padding: 8px;
         }
-        .footer { 
-            text-align: center; 
-            padding: 24px; 
-            color: var(--text-light); 
-            border-top: 1px solid #f1f5f9; 
+        input {
+            flex: 1;
+            border: none;
+            background: transparent;
+            padding: 14px 20px;
+            font-size: 1.05rem;
+            outline: none;
+        }
+        button {
+            background: var(--primary);
+            color: white;
+            border: none;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            cursor: pointer;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1><i class="fas fa-graduation-cap"></i> StudyMate AI</h1>
-            <p class="tagline">Your intelligent study companion</p>
-        </header>
-
-        <div class="main-content">
-            <div class="input-area">
-                <input 
-                    type="text" 
-                    id="question" 
-                    placeholder="Ask anything... e.g., Explain photosynthesis step by step" 
-                    autocomplete="off"
-                >
-                <button onclick="askAI()">
-                    <i class="fas fa-paper-plane"></i> Ask AI
-                </button>
-            </div>
-
-            <div class="answer-section">
-                <p style="margin-bottom:12px; font-weight:600; color:var(--text-light); display:flex; align-items:center; gap:8px;">
-                    <i class="fas fa-lightbulb"></i> Answer from StudyMate AI
-                </p>
-                <div class="answer-box" id="answer"></div>
-
-                <div class="loading" id="loading">
-                    <i class="fas fa-spinner spinner"></i>
-                    <span>Thinking deeply...</span>
-                </div>
-            </div>
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <span class="logo">📚</span>
+            <h2>StudyMate AI</h2>
         </div>
 
-        <div class="footer">
-            Powered by AI • Designed for focused learning
+        <button class="new-chat-btn" onclick="newChat()">
+            <i class="fas fa-plus"></i> New Chat
+        </button>
+
+        <div class="chat-list" id="chatList">
+            <!-- Chat items will be added by JavaScript -->
+        </div>
+
+        <div class="sidebar-footer">
+            <div class="profile" onclick="showProfile()">
+                <div class="avatar">👤</div>
+                <div>
+                    <strong id="username">Student</strong>
+                    <small id="useremail">student@email.com</small>
+                </div>
+            </div>
+            <i class="fas fa-sign-out-alt" onclick="logout()" style="cursor:pointer; font-size:1.4rem; color:#64748b;"></i>
+        </div>
+    </div>
+
+    <!-- MAIN CHAT -->
+    <div class="main">
+        <div class="chat-header">
+            <strong id="currentChatTitle">New Chat</strong>
+        </div>
+
+        <div class="messages" id="messages">
+            <!-- Messages appear here -->
+        </div>
+
+        <div class="input-area">
+            <div class="input-box">
+                <input type="text" id="question" placeholder="Ask anything..." autocomplete="off">
+                <button onclick="askAI()"><i class="fas fa-paper-plane"></i></button>
+            </div>
         </div>
     </div>
 
     <script>
-        // Your correct backend URL
-        const BACKEND_URL = "https://studymate-ai-yqqz.onrender.com";
+        let chats = JSON.parse(localStorage.getItem('chats')) || [];
+        let currentChatId = null;
+
+        function saveChats() {
+            localStorage.setItem('chats', JSON.stringify(chats));
+        }
+
+        function newChat() {
+            const newChat = {
+                id: Date.now(),
+                title: "New Chat",
+                messages: []
+            };
+            chats.unshift(newChat);
+            saveChats();
+            renderChatList();
+            switchChat(newChat.id);
+        }
+
+        function switchChat(id) {
+            currentChatId = id;
+            const chat = chats.find(c => c.id === id);
+            document.getElementById('currentChatTitle').textContent = chat.title;
+
+            const messagesDiv = document.getElementById('messages');
+            messagesDiv.innerHTML = '';
+
+            chat.messages.forEach(msg => {
+                const div = document.createElement('div');
+                div.className = `message ${msg.isUser ? 'user' : 'ai'}`;
+                div.textContent = msg.text;
+                messagesDiv.appendChild(div);
+            });
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        function renderChatList() {
+            const list = document.getElementById('chatList');
+            list.innerHTML = '';
+            chats.forEach(chat => {
+                const div = document.createElement('div');
+                div.className = `chat-item ${chat.id === currentChatId ? 'active' : ''}`;
+                div.innerHTML = `
+                    <i class="fas fa-comment"></i>
+                    <span>${chat.title}</span>
+                `;
+                div.onclick = () => switchChat(chat.id);
+                list.appendChild(div);
+            });
+        }
 
         async function askAI() {
-            const question = document.getElementById("question").value.trim();
-            const answerBox = document.getElementById("answer");
-            const loading = document.getElementById("loading");
+            const input = document.getElementById('question');
+            const question = input.value.trim();
+            if (!question || !currentChatId) return;
 
-            if (!question) {
-                answerBox.innerHTML = `<span style="color:#ef4444;">Please type a question first ✨</span>`;
-                answerBox.classList.add("show");
-                return;
-            }
+            const chat = chats.find(c => c.id === currentChatId);
+            chat.messages.push({ isUser: true, text: question });
+            input.value = '';
 
-            answerBox.classList.remove("show");
-            answerBox.innerHTML = "";
-            loading.classList.add("active");
+            // Show user message
+            const messagesDiv = document.getElementById('messages');
+            const userMsg = document.createElement('div');
+            userMsg.className = 'message user';
+            userMsg.textContent = question;
+            messagesDiv.appendChild(userMsg);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+
+            // Show typing
+            const typing = document.createElement('div');
+            typing.className = 'message ai';
+            typing.textContent = "Typing...";
+            messagesDiv.appendChild(typing);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
 
             try {
-                const res = await fetch(`${BACKEND_URL}/ask`, {
+                const res = await fetch("https://studymate-ai-yqqz.onrender.com/ask", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ question: question })
                 });
-
                 const data = await res.json();
 
-                loading.classList.remove("active");
-                answerBox.innerHTML = data.answer || "No answer received.";
-                answerBox.classList.add("show");
+                typing.remove();
+                const aiMsg = document.createElement('div');
+                aiMsg.className = 'message ai';
+                aiMsg.textContent = data.answer || "Sorry, no response.";
+                messagesDiv.appendChild(aiMsg);
+                messagesDiv.scrollTop = messagesDiv.scrollHeight;
 
-            } catch (err) {
-                loading.classList.remove("active");
-                answerBox.innerHTML = `<span style="color:#ef4444;">⚠️ Cannot connect to backend.<br>Is the backend service live?</span>`;
-                answerBox.classList.add("show");
+                chat.messages.push({ isUser: false, text: aiMsg.textContent });
+                saveChats();
+            } catch (e) {
+                typing.textContent = "❌ Connection error";
             }
         }
 
-        document.getElementById("question").addEventListener("keypress", e => {
+        function showProfile() {
+            alert("👤 User Profile\n\nName: Student\nEmail: student@email.com\n\n(Profile page coming soon)");
+        }
+
+        function logout() {
+            if (confirm("Logout from StudyMate AI?")) {
+                localStorage.clear();
+                location.reload();
+            }
+        }
+
+        // Initialize
+        if (chats.length === 0) newChat();
+        else switchChat(chats[0].id);
+
+        renderChatList();
+
+        // Press Enter to send
+        document.getElementById('question').addEventListener('keypress', e => {
             if (e.key === "Enter") askAI();
         });
     </script>
