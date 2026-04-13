@@ -183,7 +183,6 @@
             color: var(--primary);
             font-size: 1.05rem;
             padding: 20px;
-            animation: fadeIn 0.4s ease;
         }
 
         .loading.active {
@@ -200,14 +199,8 @@
         }
 
         @keyframes fadeInDown {
-            from {
-                opacity: 0;
-                transform: translateY(-30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+            from { opacity: 0; transform: translateY(-30px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         .footer {
@@ -216,16 +209,6 @@
             color: var(--text-light);
             font-size: 0.95rem;
             border-top: 1px solid #f1f5f9;
-        }
-
-        /* Micro interactions */
-        .fade-in {
-            animation: fadeIn 0.6s ease forwards;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
         }
     </style>
 </head>
@@ -245,8 +228,7 @@
                     autocomplete="off"
                 >
                 <button onclick="askAI()">
-                    <i class="fas fa-paper-plane"></i> 
-                    Ask AI
+                    <i class="fas fa-paper-plane"></i> Ask AI
                 </button>
             </div>
 
@@ -275,6 +257,11 @@
         const loading = document.getElementById("loading");
         const questionInput = document.getElementById("question");
 
+        // ==================== CHANGE THIS URL ====================
+        const BACKEND_URL = "https://studymate-ai-hpt6.onrender.com";  
+        // Replace with your new backend URL after deploying on Render / Fly.io etc.
+        // Example: "https://your-app-name.onrender.com"
+
         async function askAI() {
             const question = questionInput.value.trim();
 
@@ -284,48 +271,43 @@
                 return;
             }
 
-            // Reset and show loading
+            // Reset UI
             answerBox.classList.remove("show");
             answerBox.innerHTML = "";
             loading.classList.add("active");
 
             try {
-                const response = await fetch("https://studymate-ai-hpt6.onrender.com/ask", {
+                const response = await fetch(`${BACKEND_URL}/ask`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ question: question })
                 });
 
-                if (!response.ok) throw new Error("Failed to get response");
+                if (!response.ok) throw new Error("Server error");
 
                 const data = await response.json();
 
-                // Hide loading
                 loading.classList.remove("active");
-
-                // Show answer with smooth animation
-                answerBox.innerHTML = data.answer || "No response received.";
+                answerBox.innerHTML = data.answer || "No response received from AI.";
                 answerBox.classList.add("show");
 
             } catch (error) {
                 loading.classList.remove("active");
-                answerBox.innerHTML = `<span style="color: #ef4444;">⚠️ Sorry, I couldn't connect right now. Please try again.</span>`;
+                answerBox.innerHTML = `<span style="color: #ef4444;">⚠️ Could not connect to the AI server.<br>Please check your backend URL and try again.</span>`;
                 answerBox.classList.add("show");
-                console.error(error);
+                console.error("Error:", error);
             }
         }
 
-        // Enter key support
+        // Enter key to submit
         questionInput.addEventListener("keypress", (e) => {
-            if (e.key === "Enter") {
-                askAI();
-            }
+            if (e.key === "Enter") askAI();
         });
 
-        // Optional: Clear previous answer slightly when user starts typing again
+        // Reset answer opacity when user starts typing a new question
         questionInput.addEventListener("input", () => {
-            if (answerBox.classList.contains("show") && questionInput.value.length > 3) {
-                answerBox.style.opacity = "0.4";
+            if (answerBox.classList.contains("show")) {
+                answerBox.style.opacity = "0.35";
             }
         });
     </script>
