@@ -15,11 +15,7 @@
             --text-light: #64748b;
         }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
             font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
@@ -40,9 +36,7 @@
             transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        .container:hover {
-            transform: translateY(-8px);
-        }
+        .container:hover { transform: translateY(-8px); }
 
         header {
             background: linear-gradient(135deg, var(--primary), var(--primary-dark));
@@ -56,10 +50,8 @@
         header::before {
             content: '';
             position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
+            top: -50%; left: -50%;
+            width: 200%; height: 200%;
             background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 70%);
             animation: shine 8s linear infinite;
         }
@@ -74,21 +66,17 @@
             font-size: 3rem;
             font-weight: 700;
             margin-bottom: 10px;
-            letter-spacing: -0.02em;
             animation: fadeInDown 0.8s ease forwards;
         }
 
         .tagline {
             font-size: 1.15rem;
             opacity: 0.95;
-            font-weight: 400;
             animation: fadeInDown 1s ease 0.2s forwards;
             opacity: 0;
         }
 
-        .main-content {
-            padding: 42px 40px;
-        }
+        .main-content { padding: 42px 40px; }
 
         .input-area {
             position: relative;
@@ -102,9 +90,8 @@
             border: 2px solid #e2e8f0;
             border-radius: 20px;
             outline: none;
-            transition: all 0.4s cubic-bezier(0.4, 0.0, 0.2, 1);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             background: #f8fafc;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.04);
         }
 
         input:focus {
@@ -127,7 +114,7 @@
             font-size: 1.1rem;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             display: flex;
             align-items: center;
             gap: 10px;
@@ -137,15 +124,6 @@
         button:hover {
             background: var(--primary-dark);
             transform: translateY(-50%) scale(1.08);
-            box-shadow: 0 10px 25px rgba(99, 102, 241, 0.4);
-        }
-
-        button:active {
-            transform: translateY(-50%) scale(0.98);
-        }
-
-        .answer-section {
-            margin-top: 10px;
         }
 
         .answer-box {
@@ -156,9 +134,7 @@
             border: 2px solid #e2e8f0;
             line-height: 1.75;
             font-size: 1.12rem;
-            color: var(--text);
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
-            transition: all 0.5s cubic-bezier(0.4, 0.0, 0.2, 1);
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
             opacity: 0;
             transform: translateY(20px);
         }
@@ -172,7 +148,6 @@
             content: "Your AI study assistant is ready to help... ✨";
             color: var(--text-light);
             font-style: italic;
-            display: block;
         }
 
         .loading {
@@ -185,18 +160,11 @@
             padding: 20px;
         }
 
-        .loading.active {
-            display: flex;
-        }
+        .loading.active { display: flex; }
 
-        .spinner {
-            animation: spin 1.2s linear infinite;
-        }
+        .spinner { animation: spin 1.2s linear infinite; }
 
-        @keyframes spin {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-        }
+        @keyframes spin { to { transform: rotate(360deg); } }
 
         @keyframes fadeInDown {
             from { opacity: 0; transform: translateY(-30px); }
@@ -257,21 +225,20 @@
         const loading = document.getElementById("loading");
         const questionInput = document.getElementById("question");
 
-        // ==================== CHANGE THIS URL ====================
-        const BACKEND_URL = "https://studymate-ai-hpt6.onrender.com";  
-        // Replace with your new backend URL after deploying on Render / Fly.io etc.
-        // Example: "https://your-app-name.onrender.com"
+        // ==================== CHANGE THIS TO YOUR NEW BACKEND URL ====================
+        // After deploying on Render (or any other platform), put your new URL here
+        const BACKEND_URL = "https://YOUR-NEW-BACKEND.onrender.com";  
+        // Example: "https://studymate-ai.onrender.com"
 
         async function askAI() {
             const question = questionInput.value.trim();
 
             if (!question) {
-                answerBox.innerHTML = `<span style="color: #ef4444;">Please enter a question to get started ✨</span>`;
+                answerBox.innerHTML = `<span style="color: #ef4444;">Please type a question first ✨</span>`;
                 answerBox.classList.add("show");
                 return;
             }
 
-            // Reset UI
             answerBox.classList.remove("show");
             answerBox.innerHTML = "";
             loading.classList.add("active");
@@ -283,31 +250,34 @@
                     body: JSON.stringify({ question: question })
                 });
 
-                if (!response.ok) throw new Error("Server error");
+                if (!response.ok) throw new Error("Backend not responding");
 
                 const data = await response.json();
 
                 loading.classList.remove("active");
-                answerBox.innerHTML = data.answer || "No response received from AI.";
+                answerBox.innerHTML = data.answer || "Sorry, no answer received.";
                 answerBox.classList.add("show");
 
             } catch (error) {
                 loading.classList.remove("active");
-                answerBox.innerHTML = `<span style="color: #ef4444;">⚠️ Could not connect to the AI server.<br>Please check your backend URL and try again.</span>`;
+                answerBox.innerHTML = `<span style="color: #ef4444;">
+                    ⚠️ Cannot connect to the AI backend.<br>
+                    Please deploy your backend and update the BACKEND_URL in the code.
+                </span>`;
                 answerBox.classList.add("show");
-                console.error("Error:", error);
+                console.error(error);
             }
         }
 
-        // Enter key to submit
+        // Enter key support
         questionInput.addEventListener("keypress", (e) => {
             if (e.key === "Enter") askAI();
         });
 
-        // Reset answer opacity when user starts typing a new question
+        // Reset answer when typing new question
         questionInput.addEventListener("input", () => {
             if (answerBox.classList.contains("show")) {
-                answerBox.style.opacity = "0.35";
+                answerBox.style.opacity = "0.4";
             }
         });
     </script>
