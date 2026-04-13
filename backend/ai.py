@@ -1,9 +1,23 @@
-import requests
 import os
+import requests
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
+
+app = FastAPI(title="StudyMate AI")
+
+# Allow frontend to call the backend (important!)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],           # Change to your frontend URL later for better security
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 API_KEY = os.getenv("OPENAI_API_KEY")
 
-# Store conversation history
+# Store conversation history (in memory - resets on restart)
 messages = [
     {
         "role": "system",
@@ -11,20 +25,22 @@ messages = [
     }
 ]
 
-def ask_ai(question: str):
-    if not API_KEY:
-        return "Error: OPENAI_API_KEY not set."
+class Question(BaseModel):
+    question: str
 
-    # Add user question to conversation
-    messages.append({"role": "user", "content": question})
+@app.post("/ask")
+async def ask_question(q: Question):
+    if not API_KEY:
+        return {"answer": "Error: OPENAI_API_KEY environment variable is not set."}
+
+    # Add user question
+    messages.append({"role": "user", "content": q.question})
 
     url = "https://api.openai.com/v1/chat/completions"
-
     headers = {
         "Authorization": f"Bearer {API_KEY}",
         "Content-Type": "application/json"
     }
-
     data = {
         "model": "gpt-4o-mini",
         "messages": messages,
@@ -32,15 +48,21 @@ def ask_ai(question: str):
         "max_tokens": 300
     }
 
-    response = requests.post(url, headers=headers, json=data)
-    result = response.json()
+    try:
+        response = requests.post(url, headers=headers, json=data)
+        result = response.json()
 
-    if "choices" in result:
-        answer = result["choices"][0]["message"]["content"]
+        if "choices" in result:
+            answer = result["choices"][0]["message"]["content"]
+            messages.append({"role": "assistant", "content": answer})
+            return {"answer": answer}
+        else:
+            return {"answer": "Error from OpenAI: " + str(result)}
+    except Exception as e:
+        return {"answer": f"Request failed: {str(e)}"}
 
-        # Save AI response to conversation
-        messages.append({"role": "assistant", "content": answer})
 
-        return answer
-    else:
-        return str(result)
+# Optional: Health check route
+@app.get("/")
+async def root():
+    return {"status": "StudyMate AI backend is running"}
