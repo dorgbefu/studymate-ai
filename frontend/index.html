@@ -14,6 +14,7 @@
             --text-light: #64748b;
         }
         * { margin: 0; padding: 0; box-sizing: border-box; }
+
         body {
             font-family: 'Segoe UI', system-ui, sans-serif;
             background: linear-gradient(135deg, #f0f4ff 0%, #e0e7ff 100%);
@@ -21,6 +22,7 @@
             padding: 20px;
             color: var(--text);
         }
+
         .container {
             max-width: 920px;
             margin: 40px auto;
@@ -144,14 +146,19 @@
 
         <div class="main-content">
             <div class="input-area">
-                <input type="text" id="question" placeholder="Ask anything... e.g., Explain photosynthesis step by step" autocomplete="off">
+                <input 
+                    type="text" 
+                    id="question" 
+                    placeholder="Ask anything... e.g., Explain photosynthesis step by step" 
+                    autocomplete="off"
+                >
                 <button onclick="askAI()">
                     <i class="fas fa-paper-plane"></i> Ask AI
                 </button>
             </div>
 
             <div class="answer-section">
-                <p style="margin-bottom:12px; font-weight:600; color:var(--text-light);">
+                <p style="margin-bottom:12px; font-weight:600; color:var(--text-light); display:flex; align-items:center; gap:8px;">
                     <i class="fas fa-lightbulb"></i> Answer from StudyMate AI
                 </p>
                 <div class="answer-box" id="answer"></div>
@@ -169,6 +176,7 @@
     </div>
 
     <script>
+        // Your correct backend URL
         const BACKEND_URL = "https://studymate-ai-yqqz.onrender.com";
 
         async function askAI() {
@@ -201,12 +209,11 @@
 
             } catch (err) {
                 loading.classList.remove("active");
-                answerBox.innerHTML = `<span style="color:#ef4444;">⚠️ Cannot connect to the AI backend.<br>Please check if the service is running.</span>`;
+                answerBox.innerHTML = `<span style="color:#ef4444;">⚠️ Cannot connect to backend.<br>Is the backend service live?</span>`;
                 answerBox.classList.add("show");
             }
         }
 
-        // Press Enter to send
         document.getElementById("question").addEventListener("keypress", e => {
             if (e.key === "Enter") askAI();
         });
