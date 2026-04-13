@@ -86,6 +86,7 @@
             gap: 10px;
         }
         button:hover { background: var(--primary-dark); transform: translateY(-50%) scale(1.08); }
+
         .answer-box {
             background: #f8fafc;
             border-radius: 20px;
@@ -104,12 +105,27 @@
             color: var(--text-light);
             font-style: italic;
         }
-        .loading { display: none; align-items: center; justify-content: center; gap: 12px; color: var(--primary); padding: 20px; }
+        .loading { 
+            display: none; 
+            align-items: center; 
+            justify-content: center; 
+            gap: 12px; 
+            color: var(--primary); 
+            padding: 20px; 
+        }
         .loading.active { display: flex; }
         .spinner { animation: spin 1.2s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
-        @keyframes fadeInDown { from { opacity: 0; transform: translateY(-30px); } to { opacity: 1; transform: translateY(0); } }
-        .footer { text-align: center; padding: 24px; color: var(--text-light); border-top: 1px solid #f1f5f9; }
+        @keyframes fadeInDown { 
+            from { opacity: 0; transform: translateY(-30px); } 
+            to { opacity: 1; transform: translateY(0); } 
+        }
+        .footer { 
+            text-align: center; 
+            padding: 24px; 
+            color: var(--text-light); 
+            border-top: 1px solid #f1f5f9; 
+        }
     </style>
 </head>
 <body>
@@ -121,7 +137,12 @@
 
         <div class="main-content">
             <div class="input-area">
-                <input type="text" id="question" placeholder="Ask anything... (e.g., Explain photosynthesis step by step)" autocomplete="off">
+                <input 
+                    type="text" 
+                    id="question" 
+                    placeholder="Ask anything... e.g., Explain quantum entanglement in simple terms" 
+                    autocomplete="off"
+                >
                 <button onclick="askAI()">
                     <i class="fas fa-paper-plane"></i> Ask AI
                 </button>
@@ -145,13 +166,14 @@
     </div>
 
     <script>
-        // ←←← UPDATE THIS WITH YOUR ACTUAL RENDER URL ←←←
-        const BACKEND_URL = "https://studymate-ai.onrender.com";   // ← Change this!
+        // Your actual backend URL from Render
+        const BACKEND_URL = "https://studymate-ai-yqqz.onrender.com";
 
         async function askAI() {
-            const question = document.getElementById("question").value.trim();
+            const questionInput = document.getElementById("question");
             const answerBox = document.getElementById("answer");
             const loading = document.getElementById("loading");
+            const question = questionInput.value.trim();
 
             if (!question) {
                 answerBox.innerHTML = `<span style="color:#ef4444;">Please type a question first ✨</span>`;
@@ -159,32 +181,36 @@
                 return;
             }
 
+            // Reset UI
             answerBox.classList.remove("show");
             answerBox.innerHTML = "";
             loading.classList.add("active");
 
             try {
-                const res = await fetch(`${BACKEND_URL}/ask`, {
+                const response = await fetch(`${BACKEND_URL}/ask`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ question: question })
                 });
 
-                if (!res.ok) throw new Error("Backend returned error");
+                if (!response.ok) throw new Error("Server error");
 
-                const data = await res.json();
+                const data = await response.json();
+
                 loading.classList.remove("active");
-                answerBox.innerHTML = data.answer || "No answer received.";
+                answerBox.innerHTML = data.answer || "Sorry, no answer received.";
                 answerBox.classList.add("show");
-            } catch (err) {
+
+            } catch (error) {
                 loading.classList.remove("active");
-                answerBox.innerHTML = `<span style="color:#ef4444;">⚠️ Cannot connect to backend.<br>Please make sure your backend is deployed and update BACKEND_URL.</span>`;
+                answerBox.innerHTML = `<span style="color:#ef4444;">⚠️ Could not connect to AI backend.<br>Please check if the backend is running.</span>`;
                 answerBox.classList.add("show");
+                console.error(error);
             }
         }
 
-        // Allow pressing Enter
-        document.getElementById("question").addEventListener("keypress", e => {
+        // Press Enter to ask
+        document.getElementById("question").addEventListener("keypress", (e) => {
             if (e.key === "Enter") askAI();
         });
     </script>
