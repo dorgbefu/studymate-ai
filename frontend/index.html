@@ -121,7 +121,7 @@
 
         <div class="main-content">
             <div class="input-area">
-                <input type="text" id="question" placeholder="Ask anything... e.g., Explain quantum entanglement in simple terms" autocomplete="off">
+                <input type="text" id="question" placeholder="Ask anything... (e.g., Explain photosynthesis step by step)" autocomplete="off">
                 <button onclick="askAI()">
                     <i class="fas fa-paper-plane"></i> Ask AI
                 </button>
@@ -145,8 +145,8 @@
     </div>
 
     <script>
-        // ←←← UPDATE THIS LINE WITH YOUR NEW RENDER URL ←←←
-        const BACKEND_URL = "https://studymate-ai.onrender.com";   // Change after deployment
+        // ←←← UPDATE THIS WITH YOUR ACTUAL RENDER URL ←←←
+        const BACKEND_URL = "https://studymate-ai.onrender.com";   // ← Change this!
 
         async function askAI() {
             const question = document.getElementById("question").value.trim();
@@ -167,10 +167,10 @@
                 const res = await fetch(`${BACKEND_URL}/ask`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ question })
+                    body: JSON.stringify({ question: question })
                 });
 
-                if (!res.ok) throw new Error("Backend error");
+                if (!res.ok) throw new Error("Backend returned error");
 
                 const data = await res.json();
                 loading.classList.remove("active");
@@ -178,12 +178,12 @@
                 answerBox.classList.add("show");
             } catch (err) {
                 loading.classList.remove("active");
-                answerBox.innerHTML = `<span style="color:#ef4444;">⚠️ Cannot connect to backend.<br>Please update BACKEND_URL with your Render URL.</span>`;
+                answerBox.innerHTML = `<span style="color:#ef4444;">⚠️ Cannot connect to backend.<br>Please make sure your backend is deployed and update BACKEND_URL.</span>`;
                 answerBox.classList.add("show");
             }
         }
 
-        // Press Enter to ask
+        // Allow pressing Enter
         document.getElementById("question").addEventListener("keypress", e => {
             if (e.key === "Enter") askAI();
         });
