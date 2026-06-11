@@ -1,70 +1,67 @@
+import os
 import requests
-from bs4 import BeautifulSoup
+from dotenv import load_dotenv
+
+load_dotenv()
+
+TAVILY_API_KEY = os.getenv("TAVILY_API_KEY")
 
 def ask_ai(question: str) -> str:
     q = question.lower().strip()
     
-    # Stronger triggers for web search
-    if should_search_web(q):
-        search_result = web_search(question)
-        if "couldn't extract" not in search_result and "trouble accessing" not in search_result:
-            return search_result
-    
-    # Default intelligent response
-    return general_response(question)
-
-
-def should_search_web(question: str) -> bool:
-    triggers = [
-        "president", "prime minister", "capital", "population", "who is", "what is the",
-        "latest", "current", "news", "today", "202", "winner", "how many", "how much",
-        "what time", "what date", "when did", "who won"
-    ]
-    return any(trigger in question for trigger in triggers)
-
-
-def general_response(question: str) -> str:
-    q = question.lower()
-    
-    if "hello" in q or "hi" in q:
-        return "Hello! 👋 How can I help you with your studies today?"
-    elif "how are you" in q:
-        return "I'm doing great! Ready to assist you 😊"
-    elif "name" in q:
-        return "I'm StudyMate AI, your smart study assistant."
-    elif "what is ai" in q or "what is artificial" in q:
-        return "AI (Artificial Intelligence) is the ability of machines to perform tasks that typically require human intelligence, such as learning, reasoning, and problem-solving."
-    elif "what is computer" in q:
-        return "A computer is an electronic device that processes data according to instructions (programs) to perform calculations and tasks."
+    # Use Tavily for questions that need current info
+    if should_use_search(q):
+        return tavily_search(question)
     else:
-        return f"**Question:** {question}\n\nI'm here to help you understand concepts, solve problems, and answer study-related questions. Feel free to ask anything!"
+        return general_knowledge(question)
 
 
-def web_search(query: str) -> str:
+def should_use_search(question: str) -> bool:
+    keywords = ["latest", "current", "news", "today", "2026", "who is", "what is the", 
+                "president", "prime minister", "population", "capital", "winner", 
+                "happened", "recent", "how many"]
+    return any(k in question for k in keywords)
+
+
+def tavily_search(query: str) -> str:
+    if not TAVILY_API_KEY:
+        return "Tavily API key is not configured."
+
     try:
-        url = f"https://www.google.com/search?q={query.replace(' ', '+')}"
-        headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
+        url = "https://api.tavily.com/search"
+        payload = {
+            "api_key": TAVILY_API_KEY,
+            "query": query,
+            "search_depth": "basic",
+            "max_results": 5
+        }
         
-        response = requests.get(url, headers=headers, timeout=10)
-        soup = BeautifulSoup(response.text, 'html.parser')
-        
-        snippets = []
-        for g in soup.find_all('div', class_='g')[:5]:
-            text = g.get_text(strip=True)
-            if len(text) > 80 and "cookie" not in text.lower() and "javascript" not in text.lower():
-                snippets.append(text[:550])
-        
-        if snippets:
-            return "📡 **Latest Information from the Web:**\n\n" + "\n\n".join(snippets)
+        response = requests.post(url, json=payload, timeout=15)
+        data = response.json()
+
+        if "results" in data and data["results"]:
+            results = []
+            for item in data["results"][:3]:
+                results.append(f"• {item['title']}\n{item['content'][:300]}...")
+            return "📡 **Latest Information:**\n\n" + "\n\n".join(results)
         else:
-            return "I searched the web but couldn't extract clear information. Can you rephrase your question?"
-            
-    except Exception:
-        return "I'm having trouble accessing the internet right now."
+            return "I couldn't find relevant information. Can you rephrase?"
+
+    except Exception as e:
+        return f"Search error: {str(e)}"
+
+
+def general_knowledge(question: str) -> str:
+    q = question.lower()
+    if "hello" in q or "hi" in q:
+        return "Hello! 👋 How can I help you today?"
+    elif "what is ai" in q or "artificial intelligence" in q:
+        return "AI (Artificial Intelligence) is the simulation of human intelligence in machines..."
+    else:
+        return f"**Answer:**\n\nI'm here to help you with explanations and study topics. Ask me anything!"
 
 
 # Test
 if __name__ == "__main__":
-    print(ask_ai("What is the president of Ghana?"))
-    print(ask_ai("What is AI?"))
+    print(ask_ai("Who is the current president of Ghana?"))
     print(ask_ai("What is today's date?"))
