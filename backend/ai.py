@@ -1,62 +1,42 @@
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
-import os
 import requests
+from bs4 import BeautifulSoup
 
-app = FastAPI(title="StudyMate AI")
+def ask_ai(question: str) -> str:
+    q = question.lower().strip()
+    
+    # Trigger web search for factual/current questions
+    if any(keyword in q for keyword in ["what", "who", "when", "where", "current", "latest", "news", "2026", "today", "population", "capital"]):
+        return web_search(question)
+    
+    # Use your existing logic or simple responses
+    if "hello" in q or "hi" in q:
+        return "Hello! How can I help you with your studies today?"
+    elif "how are you" in q:
+        return "I'm doing great! Ready to assist you."
+    elif "name" in q:
+        return "I'm StudyMate AI, your intelligent study companion."
+    else:
+        return f"Based on your question: '{question}'\n\nI'm here to help with studies, explanations, and current information."
 
-# Allow your frontend to connect
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
 
-API_KEY = os.getenv("OPENAI_API_KEY")
-
-messages = [
-    {"role": "system", "content": "You are a smart study assistant. Give clear answers in simple English. Limit response to 5–8 lines."}
-]
-
-class Question(BaseModel):
-    question: str
-
-@app.post("/ask")
-async def ask_question(q: Question):
-    if not API_KEY:
-        return {"answer": "Error: OPENAI_API_KEY is not set in Environment Variables on Render."}
-
-    messages.append({"role": "user", "content": q.question})
-
-    url = "https://api.openai.com/v1/chat/completions"
-    headers = {
-        "Authorization": f"Bearer {API_KEY}",
-        "Content-Type": "application/json"
-    }
-    data = {
-        "model": "gpt-4o-mini",
-        "messages": messages,
-        "temperature": 0.5,
-        "max_tokens": 300
-    }
-
+def web_search(query: str) -> str:
     try:
-        response = requests.post(url, headers=headers, json=data)
-        result = response.json()
-
-        if "choices" in result:
-            answer = result["choices"][0]["message"]["content"]
-            messages.append({"role": "assistant", "content": answer})
-            return {"answer": answer}
+        url = f"https://www.google.com/search?q={query.replace(' ', '+')}"
+        headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
+        
+        response = requests.get(url, headers=headers, timeout=8)
+        soup = BeautifulSoup(response.text, 'html.parser')
+        
+        snippets = []
+        for result in soup.find_all('div', class_='g')[:4]:
+            text = result.get_text()
+            if len(text) > 60:
+                snippets.append(text.strip()[:400])
+        
+        if snippets:
+            return "📚 Here's what I found on the internet:\n\n" + "\n\n".join(snippets)
         else:
-            return {"answer": "OpenAI API error: " + str(result)}
-    except Exception as e:
-        return {"answer": f"Request failed: {str(e)}"}
-
-
-@app.get("/")
-async def root():
-    return {"status": "StudyMate AI is running ✅", "model": "gpt-4o-mini"}
+            return "I searched the web but couldn't extract clear information. Can you rephrase your question?"
+            
+    except Exception:
+        return "I'm having trouble accessing the internet right now. I'll answer based on my knowledge."
