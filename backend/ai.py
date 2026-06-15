@@ -4,13 +4,13 @@ from bs4 import BeautifulSoup
 def ask_ai(question: str) -> str:
     q = question.lower().strip()
     
-    # Try web search for questions that likely need current info
+    # Try web search for factual or current questions
     if should_search_web(q):
         search_result = web_search(question)
         if "couldn't" not in search_result and "trouble" not in search_result:
             return search_result
     
-    # Give good educational response
+    # Educational response
     return educational_response(question)
 
 
@@ -49,7 +49,7 @@ A game is a structured activity done for enjoyment, entertainment, or learning.
 **Types of Games:**
 - Video Games (Free Fire, PUBG, Minecraft)
 - Board Games (Chess, Ludo)
-- Sports Games
+- Sports
 
 Games help develop strategy, quick thinking, and problem-solving skills."""
 
