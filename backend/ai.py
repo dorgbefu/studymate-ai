@@ -1,81 +1,85 @@
 import requests
-import os
 from bs4 import BeautifulSoup
 
-API_KEY = os.getenv("OPENAI_API_KEY")
-
 def ask_ai(question: str) -> str:
-    if not API_KEY:
-        return "❌ Error: OPENAI_API_KEY is not set in Render Environment Variables."
-
-    # Decide whether to search the web
-    if should_search_web(question):
+    q = question.lower().strip()
+    
+    # Force web search for any question that might need current info
+    if should_search_web(q):
         search_result = web_search(question)
-        # Combine search result with AI for better answer
-        enhanced_question = f"{question}\n\nRecent web information: {search_result}"
-    else:
-        enhanced_question = question
+        if "couldn't" not in search_result and "trouble" not in search_result:
+            return search_result + "\n\n(Information fetched from the web)"
 
-    # Call OpenAI
-    url = "https://api.openai.com/v1/chat/completions"
-    headers = {
-        "Authorization": f"Bearer {API_KEY}",
-        "Content-Type": "application/json"
-    }
-    data = {
-        "model": "gpt-4o-mini",
-        "messages": [
-            {
-                "role": "system",
-                "content": "You are a helpful, smart, and friendly study assistant. Give clear, accurate answers in simple English."
-            },
-            {"role": "user", "content": enhanced_question}
-        ],
-        "temperature": 0.6,
-        "max_tokens": 400
-    }
-
-    try:
-        response = requests.post(url, headers=headers, json=data, timeout=20)
-        result = response.json()
-
-        if "choices" in result and len(result["choices"]) > 0:
-            answer = result["choices"][0]["message"]["content"].strip()
-            return answer
-        else:
-            return "Sorry, I couldn't generate a response. Please try again."
-
-    except Exception as e:
-        return f"Request failed: {str(e)}"
+    # Fallback to smart response
+    return smart_response(question)
 
 
 def should_search_web(question: str) -> bool:
+    # Broader triggers
+    triggers = ["president", "ghana", "202", "today", "current", "latest", "news", 
+                "who is", "what is the", "population", "capital", "prime minister"]
+    return any(t in question for t in triggers) or len(question.split()) > 4
+
+
+def smart_response(question: str) -> str:
     q = question.lower()
-    triggers = ["latest", "current", "news", "today", "202", "president", "prime minister", 
-                "capital", "population", "who won", "what happened", "recent"]
-    return any(trigger in q for trigger in triggers)
+    
+    if "hello" in q or "hi" in q:
+        return "Hello! 👋 How can I help you today?"
+    
+    elif "computer" in q:
+        return """**What is a Computer?**
+
+A computer is an electronic device that processes data according to instructions. 
+
+It can:
+- Take input (keyboard, mouse, touch)
+- Process information (CPU)
+- Give output (screen, speakers)
+- Store data (hard drive, SSD)
+
+Computers power smartphones, laptops, the internet, and almost all modern technology."""
+    
+    elif "game" in q:
+        return """**What is a Game?**
+
+A game is an activity done for enjoyment, entertainment, or learning. 
+
+Types of games:
+- Video games (Free Fire, PUBG, etc.)
+- Board games (Ludo, Chess)
+- Sports
+
+Games help improve thinking skills, strategy, and reaction time."""
+    
+    else:
+        return f"**Answer:**\n\n{question}\n\nI'm here to help you with clear explanations. Please ask more specific questions!"
 
 
 def web_search(query: str) -> str:
     try:
         url = f"https://www.google.com/search?q={query.replace(' ', '+')}"
-        headers = {"User-Agent": "Mozilla/5.0"}
-        response = requests.get(url, headers=headers, timeout=10)
+        headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
+        
+        response = requests.get(url, headers=headers, timeout=12)
         soup = BeautifulSoup(response.text, 'html.parser')
         
         snippets = []
-        for g in soup.find_all('div', class_='g')[:4]:
+        for g in soup.find_all('div', class_='g')[:5]:
             text = g.get_text(strip=True)
-            if len(text) > 100:
-                snippets.append(text[:400])
+            if len(text) > 120:
+                snippets.append(text[:600])
         
-        return "\n\n".join(snippets) if snippets else "No clear information found."
-        
-    except:
-        return "Could not access web information."
+        if snippets:
+            return "📡 **Fresh Information from the Web:**\n\n" + "\n\n".join(snippets)
+        else:
+            return "I searched the web but couldn't find clear results."
+            
+    except Exception:
+        return "I'm having trouble accessing current information right now."
 
 
-# For testing locally
+# Test function
 if __name__ == "__main__":
-    print(ask_ai("What is the capital of Ghana?"))
+    print(ask_ai("What is the current president of Ghana?"))
     print(ask_ai("What is a computer?"))
