@@ -1,67 +1,81 @@
-import os
 import requests
-from dotenv import load_dotenv
+import os
+from bs4 import BeautifulSoup
 
-load_dotenv()
-
-TAVILY_API_KEY = os.getenv("TAVILY_API_KEY")
+API_KEY = os.getenv("OPENAI_API_KEY")
 
 def ask_ai(question: str) -> str:
-    q = question.lower().strip()
-    
-    # Use Tavily for questions that need current info
-    if should_use_search(q):
-        return tavily_search(question)
+    if not API_KEY:
+        return "❌ Error: OPENAI_API_KEY is not set in Render Environment Variables."
+
+    # Decide whether to search the web
+    if should_search_web(question):
+        search_result = web_search(question)
+        # Combine search result with AI for better answer
+        enhanced_question = f"{question}\n\nRecent web information: {search_result}"
     else:
-        return general_knowledge(question)
+        enhanced_question = question
 
-
-def should_use_search(question: str) -> bool:
-    keywords = ["latest", "current", "news", "today", "2026", "who is", "what is the", 
-                "president", "prime minister", "population", "capital", "winner", 
-                "happened", "recent", "how many"]
-    return any(k in question for k in keywords)
-
-
-def tavily_search(query: str) -> str:
-    if not TAVILY_API_KEY:
-        return "Tavily API key is not configured."
+    # Call OpenAI
+    url = "https://api.openai.com/v1/chat/completions"
+    headers = {
+        "Authorization": f"Bearer {API_KEY}",
+        "Content-Type": "application/json"
+    }
+    data = {
+        "model": "gpt-4o-mini",
+        "messages": [
+            {
+                "role": "system",
+                "content": "You are a helpful, smart, and friendly study assistant. Give clear, accurate answers in simple English."
+            },
+            {"role": "user", "content": enhanced_question}
+        ],
+        "temperature": 0.6,
+        "max_tokens": 400
+    }
 
     try:
-        url = "https://api.tavily.com/search"
-        payload = {
-            "api_key": TAVILY_API_KEY,
-            "query": query,
-            "search_depth": "basic",
-            "max_results": 5
-        }
-        
-        response = requests.post(url, json=payload, timeout=15)
-        data = response.json()
+        response = requests.post(url, headers=headers, json=data, timeout=20)
+        result = response.json()
 
-        if "results" in data and data["results"]:
-            results = []
-            for item in data["results"][:3]:
-                results.append(f"• {item['title']}\n{item['content'][:300]}...")
-            return "📡 **Latest Information:**\n\n" + "\n\n".join(results)
+        if "choices" in result and len(result["choices"]) > 0:
+            answer = result["choices"][0]["message"]["content"].strip()
+            return answer
         else:
-            return "I couldn't find relevant information. Can you rephrase?"
+            return "Sorry, I couldn't generate a response. Please try again."
 
     except Exception as e:
-        return f"Search error: {str(e)}"
+        return f"Request failed: {str(e)}"
 
 
-def general_knowledge(question: str) -> str:
+def should_search_web(question: str) -> bool:
     q = question.lower()
-    if "hello" in q or "hi" in q:
-        return "Hello! 👋 How can I help you today?"
-    elif "what is ai" in q or "artificial intelligence" in q:
-        return "AI (Artificial Intelligence) is the simulation of human intelligence in machines..."
-    else:
-        return f"**Answer:**\n\nI'm here to help you with explanations and study topics. Ask me anything!"
+    triggers = ["latest", "current", "news", "today", "202", "president", "prime minister", 
+                "capital", "population", "who won", "what happened", "recent"]
+    return any(trigger in q for trigger in triggers)
 
 
-# Test
+def web_search(query: str) -> str:
+    try:
+        url = f"https://www.google.com/search?q={query.replace(' ', '+')}"
+        headers = {"User-Agent": "Mozilla/5.0"}
+        response = requests.get(url, headers=headers, timeout=10)
+        soup = BeautifulSoup(response.text, 'html.parser')
+        
+        snippets = []
+        for g in soup.find_all('div', class_='g')[:4]:
+            text = g.get_text(strip=True)
+            if len(text) > 100:
+                snippets.append(text[:400])
+        
+        return "\n\n".join(snippets) if snippets else "No clear information found."
+        
+    except:
+        return "Could not access web information."
+
+
+# For testing locally
 if __name__ == "__main__":
-    print(ask_ai("Who is the current president of Ghana?"))
-    print(ask_ai("What is today's date?"))
+    print(ask_ai("What is the capital of Ghana?"))
+    print(ask_ai("What is a computer?"))
