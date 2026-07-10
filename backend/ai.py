@@ -26,27 +26,29 @@ def ask_ai(question: str) -> str:
 def web_search(query: str) -> str:
     try:
         url = f"https://www.google.com/search?q={query.replace(' ', '+')}"
-        headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36"
+        }
         
-        response = requests.get(url, headers=headers, timeout=10)
-        print(f"DEBUG: Google status code: {response.status_code}")
+        response = requests.get(url, headers=headers, timeout=12)
+        print(f"DEBUG: Status: {response.status_code}")
         
         soup = BeautifulSoup(response.text, 'html.parser')
         
+        # Better extraction logic
         snippets = []
-        for element in soup.find_all(['div', 'span', 'p', 'h1', 'h2']):
-            text = element.get_text(strip=True)
-            if 80 < len(text) < 650 and "cookie" not in text.lower():
-                snippets.append(text)
-                if len(snippets) >= 5:
-                    break
+        for g in soup.select('div.g, .VwiC3b, .hgKElc, .tF2Cxc'):
+            text = g.get_text(strip=True)
+            if len(text) > 100 and "cookie" not in text.lower() and "consent" not in text.lower():
+                snippets.append(text[:650])
         
         if snippets:
-            return "**📡 Web Search Result:**\n\n" + "\n\n".join(snippets[:3])
-        return "I searched but found no clear information."
+            return "**📡 Web Result:**\n\n" + "\n\n".join(snippets[:3])
+        
+        return "I searched the web but couldn't extract useful information."
         
     except Exception as e:
-        return f"Web search error: {str(e)[:100]}"
+        return f"Search error: {str(e)[:80]}"
 
 
 if __name__ == "__main__":
