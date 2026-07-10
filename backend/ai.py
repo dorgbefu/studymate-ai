@@ -5,10 +5,11 @@ import os
 # Get API key from environment variable (secure)
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
-if not OPENAI_API_KEY:
-    # Fallback message if key is missing
-    def ask_ai(question: str):
-        return "⚠️ API key not configured. Please set OPENAI_API_KEY in your Render environment variables."
+def ask_ai(question: str) -> str:
+    if not OPENAI_API_KEY or len(OPENAI_API_KEY) < 20:
+        return f"API Key not loaded properly. Length = {len(OPENAI_API_KEY) if OPENAI_API_KEY else 0}"
+    
+    # ... rest of the function remains the same
 else:
     def ask_ai(question: str) -> str:
         q = question.lower().strip()
