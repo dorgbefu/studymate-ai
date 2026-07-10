@@ -1,55 +1,59 @@
 import requests
-from bs4 import BeautifulSoup
 from datetime import datetime
+import os
+
+# === PUT YOUR OPENAI API KEY HERE ===
+OPENAI_API_KEY = "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
+"   # ← Change this
 
 def ask_ai(question: str) -> str:
     q = question.lower().strip()
-    print(f"DEBUG: Received question: {question}")  # For Render logs
     
-    # Direct answers
+    # Direct fast answers
     if "today" in q and ("date" in q or "day" in q):
         return f"**Today's Date:**\n{datetime.now().strftime('%A, %B %d, %Y')}"
     
     if "president of ghana" in q or "ghana president" in q:
-        return "**President of Ghana:**\nJohn Dramani Mahama (since January 7, 2025)"
+        return "**President of Ghana:** John Dramani Mahama (since January 7, 2025)"
     
-    if "japan" in q and ("prime minister" in q or "president" in q):
-        return "**Prime Minister of Japan:**\nSanae Takaichi (since October 21, 2025)"
+    if "japan" in q and ("prime" in q or "president" in q):
+        return "**Prime Minister of Japan:** Sanae Takaichi (since October 21, 2025)"
     
-    # Force web search for everything else
-    print(f"DEBUG: Calling web_search for: {question}")
-    result = web_search(question)
-    print(f"DEBUG: Web search returned: {result[:100]}...")  # Truncated
-    return result
+    # Use GPT for everything else
+    return ask_gpt(question)
 
 
-def web_search(query: str) -> str:
+def ask_gpt(question: str) -> str:
     try:
-        url = f"https://www.google.com/search?q={query.replace(' ', '+')}"
+        url = "https://api.openai.com/v1/chat/completions"
         headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36"
+            "Authorization": f"Bearer {OPENAI_API_KEY}",
+            "Content-Type": "application/json"
+        }
+        data = {
+            "model": "gpt-4o-mini",   # cheap & good
+            "messages": [
+                {"role": "system", "content": "You are a helpful study assistant. Answer clearly and accurately for students."},
+                {"role": "user", "content": question}
+            ],
+            "temperature": 0.7,
+            "max_tokens": 400
         }
         
-        response = requests.get(url, headers=headers, timeout=12)
-        print(f"DEBUG: Status: {response.status_code}")
+        response = requests.post(url, headers=headers, json=data, timeout=15)
         
-        soup = BeautifulSoup(response.text, 'html.parser')
-        
-        # Better extraction logic
-        snippets = []
-        for g in soup.select('div.g, .VwiC3b, .hgKElc, .tF2Cxc'):
-            text = g.get_text(strip=True)
-            if len(text) > 100 and "cookie" not in text.lower() and "consent" not in text.lower():
-                snippets.append(text[:650])
-        
-        if snippets:
-            return "**📡 Web Result:**\n\n" + "\n\n".join(snippets[:3])
-        
-        return "I searched the web but couldn't extract useful information."
-        
+        if response.status_code == 200:
+            answer = response.json()["choices"][0]["message"]["content"]
+            return answer.strip()
+        else:
+            return f"API Error ({response.status_code}). Check your API key."
+            
     except Exception as e:
-        return f"Search error: {str(e)[:80]}"
+        return f"Error connecting to GPT: {str(e)[:100]}"
 
 
+# For testing locally
 if __name__ == "__main__":
     print(ask_ai("what is matter"))
+    print(ask_ai("who is the president of ghana"))
+    print(ask_ai("what is orange"))
