@@ -2,30 +2,27 @@ import requests
 from datetime import datetime
 import os
 
-# Get API key from environment variable (secure)
+# Get API key from Render environment variable
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
 def ask_ai(question: str) -> str:
     if not OPENAI_API_KEY or len(OPENAI_API_KEY) < 20:
         return f"API Key not loaded properly. Length = {len(OPENAI_API_KEY) if OPENAI_API_KEY else 0}"
     
-    # ... rest of the function remains the same
-else:
-    def ask_ai(question: str) -> str:
-        q = question.lower().strip()
-        
-        # Direct answers (fast, no cost)
-        if "today" in q and ("date" in q or "day" in q):
-            return f"**Today's Date:**\n{datetime.now().strftime('%A, %B %d, %Y')}"
-        
-        if "president of ghana" in q or "ghana president" in q:
-            return "**President of Ghana:** John Dramani Mahama (since January 7, 2025)"
-        
-        if "japan" in q and ("prime minister" in q or "president" in q):
-            return "**Prime Minister of Japan:** Sanae Takaichi (since October 21, 2025)"
-        
-        # Use GPT
-        return ask_gpt(question)
+    q = question.lower().strip()
+    
+    # Direct fast answers
+    if "today" in q and ("date" in q or "day" in q):
+        return f"**Today's Date:**\n{datetime.now().strftime('%A, %B %d, %Y')}"
+    
+    if "president of ghana" in q or "ghana president" in q:
+        return "**President of Ghana:** John Dramani Mahama (since January 7, 2025)"
+    
+    if "japan" in q and ("prime minister" in q or "president" in q):
+        return "**Prime Minister of Japan:** Sanae Takaichi (since October 21, 2025)"
+    
+    # Use GPT for all other questions
+    return ask_gpt(question)
 
 
 def ask_gpt(question: str) -> str:
@@ -53,9 +50,10 @@ def ask_gpt(question: str) -> str:
             return f"OpenAI API Error: {response.status_code}"
             
     except Exception as e:
-        return f"Connection error: {str(e)[:80]}"
+        return f"Connection error: {str(e)[:100]}"
 
 
 # Test
 if __name__ == "__main__":
     print(ask_ai("what is matter"))
+    print(ask_ai("hi"))
