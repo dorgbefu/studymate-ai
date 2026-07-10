@@ -12,6 +12,13 @@ def ask_ai(question: str) -> str:
     if "time" in q:
         return f"**Current Time:** {datetime.now().strftime('%I:%M %p')}"
     
+    # Direct answers for leaders (most reliable)
+    if "president of ghana" in q or "ghana president" in q:
+        return "**President of Ghana:**\nJohn Dramani Mahama (since January 7, 2025)"
+    
+    if "prime minister of japan" in q or "japan prime minister" in q or "president of japan" in q:
+        return "**Prime Minister of Japan:**\nSanae Takaichi (since October 21, 2025)"
+    
     # Try web search for dynamic questions
     if should_search_web(q):
         result = web_search(question)
@@ -23,11 +30,12 @@ def ask_ai(question: str) -> str:
 
 
 def should_search_web(question: str) -> bool:
+    q = question.lower()
     triggers = [
-        "president", "prime minister", "who is", "current", "latest", "news",
-        "today", "202", "population", "capital", "ghana", "japan", "matter"
+        "president", "prime minister", "who is", "current", "latest", 
+        "news", "today", "202", "population", "capital", "ghana", "japan", "matter"
     ]
-    return any(trigger in question for trigger in triggers)
+    return any(trigger in q for trigger in triggers)
 
 
 def educational_response(question: str) -> str:
@@ -38,12 +46,12 @@ def educational_response(question: str) -> str:
 A computer is an electronic device that processes data according to a set of instructions (a program).
 
 **Main Functions:**
-- Input (keyboard, mouse, touchscreen)
-- Processing (CPU)
-- Output (screen, speakers, printer)
-- Storage (RAM, SSD, Hard Drive)
+- Takes input (keyboard, mouse, touchscreen)
+- Processes data (CPU)
+- Gives output (screen, speakers, printer)
+- Stores data (RAM, SSD, Hard Drive)
 
-Computers power smartphones, laptops, and the internet."""
+Computers power smartphones, laptops, the internet, and almost all modern technology."""
     
     elif "matter" in q:
         return """**What is Matter?**
@@ -51,11 +59,11 @@ Matter is anything that has mass and takes up space. It is the "stuff" that make
 
 **States of Matter:**
 - Solid (ice, rock)
-- Liquid (water)
+- Liquid (water, oil)
 - Gas (air, oxygen)
-- Plasma (stars, lightning)
+- Plasma (in stars and lightning)
 
-Everything you can touch is made of matter."""
+Matter can change states but cannot be created or destroyed easily."""
     
     elif "hello" in q or "hi" in q:
         return "Hello! 👋 How can I help you with your studies today?"
@@ -73,9 +81,9 @@ def web_search(query: str) -> str:
         soup = BeautifulSoup(response.text, 'html.parser')
         
         snippets = []
-        for g in soup.find_all('div', class_=True)[:8]:
+        for g in soup.find_all('div', class_=True)[:10]:
             text = g.get_text(strip=True)
-            if 120 < len(text) < 650 and "cookie" not in text.lower():
+            if 100 < len(text) < 650 and "cookie" not in text.lower() and "consent" not in text.lower():
                 snippets.append(text[:600])
                 if len(snippets) >= 4:
                     break
@@ -93,4 +101,5 @@ if __name__ == "__main__":
     print(ask_ai("what is a computer"))
     print(ask_ai("what is matter"))
     print(ask_ai("who is the president of ghana"))
+    print(ask_ai("who is the prime minister of japan"))
     print(ask_ai("what is today's date"))
