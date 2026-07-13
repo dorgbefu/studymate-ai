@@ -3,7 +3,7 @@ from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
 import requests
 from bs4 import BeautifulSoup
-from ai import ask_ai  # Keep your existing AI logic
+from ai import ask_ai
 import base64
 import os
 
@@ -65,9 +65,7 @@ async def ask(
     question: str = Form(...),
     file: UploadFile = File(None)
 ):
-    # If file is uploaded, we pass it to your ask_ai function or handle here
     if file:
-        # For now, read file and append to question
         content = await file.read()
         filename = file.filename
         try:
@@ -79,5 +77,5 @@ async def ask(
         answer = ask_ai(enhanced_question)
     else:
         answer = ask_ai(question)
-    
+   
     return {"answer": answer}
