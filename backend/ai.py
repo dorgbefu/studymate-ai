@@ -35,7 +35,13 @@ def ask_gpt(question: str) -> str:
         payload = {
             "model": "gpt-4o-mini",
             "messages": [
-                {"role": "system", "content": "You are a helpful and accurate study assistant for students."},
+                {
+                    "role": "system", 
+                    "content": """You are StudyMate AI, a helpful study assistant for students.
+                    Answer questions clearly and accurately.
+                    If asked about your training data, model, or how you were trained, politely refuse and say you cannot share that information.
+                    Keep answers educational and student-friendly."""
+                },
                 {"role": "user", "content": question}
             ],
             "temperature": 0.7,
@@ -51,8 +57,6 @@ def ask_gpt(question: str) -> str:
             
     except Exception as e:
         return f"Connection error: {str(e)[:100]}"
-
-
 # Test
 if __name__ == "__main__":
     print(ask_ai("what is matter"))
