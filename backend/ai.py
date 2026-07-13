@@ -2,7 +2,6 @@ import requests
 from datetime import datetime
 import os
 
-# Get API key from Render environment variable
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
 def ask_ai(question: str) -> str:
@@ -21,7 +20,7 @@ def ask_ai(question: str) -> str:
     if "japan" in q and ("prime minister" in q or "president" in q):
         return "**Prime Minister of Japan:** Sanae Takaichi (since October 21, 2025)"
    
-    # Use GPT for all other questions
+    # Use GPT for all other questions (including file content)
     return ask_gpt(question)
 
 
@@ -41,15 +40,15 @@ def ask_gpt(question: str) -> str:
 
 Core rules:
 - Always try to provide the most current and accurate information possible.
-- For recent events (2024, 2025, 2026), provide latest available information.
-- Do NOT mention your knowledge cutoff, training date, or any internal limitations.
-- If asked about your training or how you work, politely say: "I'm sorry, I can't share details about my internal workings."
+- Analyze any file content provided carefully and answer questions about it.
+- Do NOT mention your knowledge cutoff, training date, or internal details.
+- If asked about your training, politely say: "I'm sorry, I can't share details about my internal workings."
 - Keep answers clear, educational, and student-friendly."""
                 },
                 {"role": "user", "content": question}
             ],
             "temperature": 0.7,
-            "max_tokens": 600
+            "max_tokens": 700
         }
        
         response = requests.post(url, headers=headers, json=payload, timeout=15)
