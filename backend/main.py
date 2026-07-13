@@ -1,9 +1,11 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, UploadFile, File, Form
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
 import requests
 from bs4 import BeautifulSoup
 from ai import ask_ai  # Keep your existing AI logic
+import base64
+import os
 
 app = FastAPI(title="StudyMate AI")
 
@@ -29,19 +31,16 @@ def home():
         <br>
         <input type="text" id="question" placeholder="Ask anything..." size="60">
         <button onclick="askAI()">Send</button>
-
         <script>
         async function askAI() {
             const input = document.getElementById("question");
             const chat = document.getElementById("chat");
             const question = input.value.trim();
-            
+           
             if (!question) return;
-
             chat.innerHTML += `<b>You:</b> ${question}<br>`;
             chat.innerHTML += `AI: Thinking...<br>`;
             chat.scrollTop = chat.scrollHeight;
-
             try {
                 const response = await fetch("/ask", {
                     method: "POST",
@@ -53,7 +52,6 @@ def home():
             } catch (e) {
                 chat.innerHTML = chat.innerHTML.replace("Thinking...", "❌ Connection error");
             }
-
             input.value = "";
             chat.scrollTop = chat.scrollHeight;
         }
@@ -63,6 +61,23 @@ def home():
     """
 
 @app.post("/ask")
-def ask(question: Question):
-    answer = ask_ai(question.question)
+async def ask(
+    question: str = Form(...),
+    file: UploadFile = File(None)
+):
+    # If file is uploaded, we pass it to your ask_ai function or handle here
+    if file:
+        # For now, read file and append to question
+        content = await file.read()
+        filename = file.filename
+        try:
+            text = content.decode('utf-8', errors='ignore')[:10000]
+            enhanced_question = f"{question}\n\nFile uploaded: {filename}\nContent:\n{text}"
+        except:
+            enhanced_question = f"{question}\n\nFile uploaded: {filename} (binary file)"
+        
+        answer = ask_ai(enhanced_question)
+    else:
+        answer = ask_ai(question)
+    
     return {"answer": answer}
